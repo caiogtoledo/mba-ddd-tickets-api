@@ -66,6 +66,36 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
     }
   }
 
+  changeName(name: string) {
+    this.name = name;
+  }
+
+  changeDescription(description: string | null) {
+    this.description = description;
+  }
+
+  changePrice(price: number) {
+    this.price = price;
+  }
+
+  publish() {
+    this.is_published = true;
+  }
+
+  unPublish() {
+    this.is_published = false;
+  }
+
+  publishAll() {
+    this.publish();
+    this.spots?.forEach((spot) => spot.publish());
+  }
+
+  unPublishAll() {
+    this.unPublish();
+    this.spots?.forEach((spot) => spot.unPublish());
+  }
+
   toJSON() {
     return {
       id: this.id.value,

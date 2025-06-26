@@ -1,11 +1,18 @@
 import { AggregateRoot } from '../../../shared/domain/aggregate-root';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
+import { Event } from './event.entity';
 
 export class PartnerId extends Uuid {}
 
 export type PartnerConstructorProps = {
   id?: PartnerId | string;
   name: string;
+};
+
+export type initEventCommand = {
+  name: string;
+  description?: string | null;
+  date: Date;
 };
 
 export class Partner extends AggregateRoot<PartnerConstructorProps> {
@@ -27,7 +34,21 @@ export class Partner extends AggregateRoot<PartnerConstructorProps> {
     });
   }
 
+  initEvent(command: initEventCommand) {
+    return Event.create({
+      ...command,
+      partner_id: this.id,
+    });
+  }
+
+  changeName(name: string) {
+    this.name = name;
+  }
+
   toJSON() {
-    throw new Error('Method not implemented.');
+    return {
+      id: this.id.value,
+      name: this.name,
+    };
   }
 }

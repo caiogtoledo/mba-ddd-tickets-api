@@ -74,6 +74,36 @@ export class Event extends AggregateRoot<EventConstructorProps> {
     });
   }
 
+  changeName(name: string) {
+    this.name = name;
+  }
+
+  changeDescription(description: string | null) {
+    this.description = description;
+  }
+
+  changeDate(date: Date) {
+    this.date = date;
+  }
+
+  publish() {
+    this.is_published = true;
+  }
+
+  unPublish() {
+    this.is_published = false;
+  }
+
+  publishAll() {
+    this.is_published = true;
+    this.sections.forEach((section) => section.publishAll());
+  }
+
+  unPublishAll() {
+    this.is_published = false;
+    this.sections.forEach((section) => section.unPublishAll());
+  }
+
   addSection(command: AddSectionCommand) {
     const section = EventSection.create(command);
     this.sections.add(section);
