@@ -1,5 +1,6 @@
 import { Entity } from '../../../shared/domain/entity';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
+import { EventSpot } from './event-spot';
 
 export class EventSectionId extends Uuid {}
 
@@ -18,7 +19,7 @@ export type EventSectionConstructorProps = {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
-  spots?: Set<EventSection>;
+  spots?: Set<EventSpot>;
 };
 
 export class EventSection extends Entity<EventSectionConstructorProps> {
@@ -29,7 +30,7 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
-  spots?: Set<EventSection>;
+  spots?: Set<EventSpot>;
 
   constructor(props: EventSectionConstructorProps) {
     super();
@@ -43,16 +44,26 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
     this.total_spots = props.total_spots;
     this.total_spots_reserved = props.total_spots_reserved ?? 0;
     this.price = props.price;
-    this.spots = props.spots ?? new Set<EventSection>();
+    this.spots = props.spots ?? new Set<EventSpot>();
   }
 
   static create(command: EventSectionCreateCommand) {
-    return new EventSection({
+    const section = new EventSection({
       ...command,
       description: command.description ?? null,
       is_published: false,
       total_spots_reserved: 0,
     });
+
+    section.initSpots();
+
+    return section;
+  }
+
+  private initSpots() {
+    for (let i = 0; i < this.total_spots; i++) {
+      this.spots?.add(EventSpot.create());
+    }
   }
 
   toJSON() {
