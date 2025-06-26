@@ -18,6 +18,7 @@ export type EventSectionConstructorProps = {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
+  spots?: Set<EventSection>;
 };
 
 export class EventSection extends Entity<EventSectionConstructorProps> {
@@ -28,6 +29,7 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
+  spots?: Set<EventSection>;
 
   constructor(props: EventSectionConstructorProps) {
     super();
@@ -41,6 +43,7 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
     this.total_spots = props.total_spots;
     this.total_spots_reserved = props.total_spots_reserved ?? 0;
     this.price = props.price;
+    this.spots = props.spots ?? new Set<EventSection>();
   }
 
   static create(command: EventSectionCreateCommand) {
@@ -61,6 +64,9 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
       total_spots: this.total_spots,
       total_spots_reserved: this.total_spots_reserved,
       price: this.price,
+      spots: this.spots
+        ? Array.from(this.spots).map((spot) => spot.toJSON())
+        : [],
     };
   }
 }
