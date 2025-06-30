@@ -8,9 +8,9 @@ test('should create a valid Customer entity', () => {
 
   const customer = Customer.create({
     cpf: new Cpf(cpf),
-    name: new Name(name),
+    name: name,
   });
 
   expect(customer.cpf.value).toBe(cpf);
-  expect(customer.name.value).toBe(name);
+  expect(customer.name).toBe(name);
 });

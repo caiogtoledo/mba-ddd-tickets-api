@@ -15,6 +15,7 @@ test('deve criar um partner no banco', async () => {
   });
 
   await orm.schema.refreshDatabase();
+
   // Uso do fork para evitar conflitos com o cache do EntityManager
   const em = orm.em.fork();
 

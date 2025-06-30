@@ -20,25 +20,13 @@ describe('PartnerMysqlRepository', () => {
     });
 
     await orm.schema.refreshDatabase();
+
     em = orm.em.fork();
     partnerRepo = new PartnerMysqlRepository(em);
   });
 
   afterEach(async () => {
     await orm.close();
-  });
-
-  test('deve criar um partner no banco', async () => {
-    const partner = Partner.create({ name: 'Test Partner' });
-    await partnerRepo.add(partner);
-    await em.flush();
-    await em.clear();
-
-    const found = await partnerRepo.findById(partner.id);
-
-    expect(found).toBeInstanceOf(Partner);
-    expect(found?.name).toBe('Test Partner');
-    expect(found?.id.value).toBe(partner.id.value);
   });
 
   test('deve criar e atualizar um partner no banco', async () => {

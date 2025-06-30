@@ -8,13 +8,13 @@ export class CustomerId extends Uuid {}
 export type CustomerConstructorProps = {
   id?: CustomerId | string;
   cpf: Cpf;
-  name: Name;
+  name: string;
 };
 
 export class Customer extends AggregateRoot<CustomerConstructorProps> {
   id: CustomerId | string; // conveniente para o banco de dados
   cpf: Cpf;
-  name: Name;
+  name: string;
 
   constructor(props: CustomerConstructorProps) {
     super();
@@ -26,8 +26,12 @@ export class Customer extends AggregateRoot<CustomerConstructorProps> {
     this.name = props.name!;
   }
 
-  static create(command: { name: Name; cpf: Cpf }) {
+  static create(command: { name: string; cpf: Cpf }) {
     return new Customer(command);
+  }
+
+  changeName(name: string) {
+    this.name = name;
   }
 
   toJSON() {

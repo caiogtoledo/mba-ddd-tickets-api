@@ -2,7 +2,7 @@ import {
   Partner,
   PartnerId,
 } from '../../../../events/domain/entities/partner.entity';
-import { PartnerRepositoryInterface } from '../../../../events/domain/repositories/partner.repository.interface';
+import { PartnerRepositoryInterface } from '../../../domain/repositories/partner-repository.interface';
 import { EntityManager } from '@mikro-orm/mysql';
 
 export class PartnerMysqlRepository implements PartnerRepositoryInterface {
