@@ -23,10 +23,7 @@ export const CustomerSchema = new EntitySchema<Customer>({
   class: Customer,
   uniques: [{ properties: ['cpf'] }],
   properties: {
-    id: {
-      type: CustomerIdSchemaType,
-      primary: true,
-    },
+    id: { type: CustomerIdSchemaType, primary: true },
     cpf: { type: CpfSchemaType },
     name: { type: 'string', length: 255 },
   },
@@ -35,28 +32,27 @@ export const CustomerSchema = new EntitySchema<Customer>({
 export const EventSchema = new EntitySchema<Event>({
   class: Event,
   properties: {
-    id: {
-      type: EventIdSchemaType,
-      primary: true,
-    },
+    id: { type: EventIdSchemaType, primary: true },
     name: { type: 'string', length: 255 },
     description: { type: 'text', nullable: true },
     date: { type: 'date' },
     is_published: { type: 'boolean', default: false },
     total_spots: { type: 'number', default: 0 },
     total_spots_reserved: { type: 'number', default: 0 },
+
     sections: {
-      //   reference: '1:m',
+      type: 'Entity',
       entity: () => EventSection,
-      mappedBy: (section) => section[0].event_id,
-      eager: true,
+      mappedBy: (section: any) => section.event_id,
       cascade: [Cascade.ALL],
+      eager: true,
     },
+
     partner_id: {
-      //   reference: 'm:1',
+      type: PartnerIdSchemaType,
       entity: () => Partner,
       mapToPk: true,
-      type: PartnerIdSchemaType,
+      hidden: true,
     },
   },
 });
@@ -64,48 +60,44 @@ export const EventSchema = new EntitySchema<Event>({
 export const EventSectionSchema = new EntitySchema<EventSection>({
   class: EventSection,
   properties: {
-    id: {
-      type: EventSectionIdSchemaType,
-      primary: true,
-    },
+    id: { type: EventSectionIdSchemaType, primary: true },
     name: { type: 'string', length: 255 },
     description: { type: 'text', nullable: true },
     is_published: { type: 'boolean', default: false },
     total_spots: { type: 'number', default: 0 },
     total_spots_reserved: { type: 'number', default: 0 },
     price: { type: 'number', default: 0 },
+
     spots: {
-      //   reference: '1:m',
+      type: 'Entity',
       entity: () => EventSpot,
-      mappedBy: (section) => section[0].event_section_id,
-      eager: true,
+      mappedBy: (spot: any) => spot.event_section_id,
       cascade: [Cascade.ALL],
+      eager: true,
     },
-    // event: {
-    //   reference: 'm:1',
-    //   entity: () => Event,
-    //   hidden: true,
-    //   customType: new EventIdSchemaType(),
-    // },
+
+    event_id: {
+      type: EventIdSchemaType,
+      entity: () => Event,
+      mapToPk: true,
+      hidden: true,
+    },
   },
 });
 
 export const EventSpotSchema = new EntitySchema<EventSpot>({
   class: EventSpot,
   properties: {
-    id: {
-      type: EventSpotIdSchemaType,
-      primary: true,
-    },
+    id: { type: EventSpotIdSchemaType, primary: true },
     location: { type: 'string', length: 255, nullable: true },
     is_reserved: { type: 'boolean', default: false },
     is_published: { type: 'boolean', default: false },
-    // event_section_id: {
-    //   reference: 'm:1',
-    //   entity: () => EventSection,
-    //   hidden: true,
-    //   mapToPk: true,
-    //   customType: new EventSectionIdSchemaType(),
-    // },
+
+    event_section_id: {
+      type: EventSectionIdSchemaType,
+      entity: () => EventSection,
+      mapToPk: true,
+      hidden: true,
+    },
   },
 });

@@ -1,5 +1,6 @@
 import { Entity } from '../../../shared/domain/entity';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
+import { EventSectionId } from './event-section';
 
 export class EventSpotId extends Uuid {}
 
@@ -8,6 +9,7 @@ export type EventSpotConstructorProps = {
   location: string | null;
   is_reserved?: boolean;
   is_published: boolean;
+  event_section_id: EventSectionId | string;
 };
 
 export class EventSpot extends Entity<EventSpotConstructorProps> {
@@ -15,6 +17,7 @@ export class EventSpot extends Entity<EventSpotConstructorProps> {
   location: string | null;
   is_reserved?: boolean;
   is_published: boolean;
+  event_section_id: EventSectionId | string;
 
   constructor(props: EventSpotConstructorProps) {
     super();
@@ -25,13 +28,19 @@ export class EventSpot extends Entity<EventSpotConstructorProps> {
     this.location = props.location;
     this.is_reserved = props.is_reserved;
     this.is_published = props.is_published;
+
+    this.event_section_id =
+      props.event_section_id instanceof EventSectionId
+        ? props.event_section_id
+        : new EventSectionId(props.event_section_id);
   }
 
-  static create() {
+  static create(event_section_id: EventSectionId | string) {
     return new EventSpot({
       location: null,
       is_published: false,
       is_reserved: false,
+      event_section_id,
     });
   }
 
