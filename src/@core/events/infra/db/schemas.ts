@@ -1,103 +1,259 @@
-import { Cascade, EntitySchema } from '@mikro-orm/core';
-import { Partner } from '../../domain/entities/partner.entity';
-import { PartnerIdSchemaType } from './types/partner-id.schema-type';
-import { Customer } from '../../domain/entities/customer.entity';
-import { CustomerIdSchemaType } from './types/customer-id.schema-type';
-import { CpfSchemaType } from './types/cpf.schema-type';
-import { EventIdSchemaType } from './types/event-id.schema-type';
+import {
+  Entity,
+  PrimaryKey,
+  Property,
+  OneToMany,
+  ManyToOne,
+  Collection,
+  Cascade,
+  EntitySchema,
+} from '@mikro-orm/core';
+
+import {
+  ICollection,
+  MyCollectionFactory,
+} from '../../../shared/domain/my-collection';
 import { EventSection } from '../../domain/entities/event-section';
-import { EventSectionIdSchemaType } from './types/event-section-id.schema-type';
-import { EventSpot } from '../../domain/entities/event-spot';
-import { EventSpotIdSchemaType } from './types/event-spot-id.schema-type';
+import { EventSpot, EventSpotId } from '../../domain/entities/event-spot';
+import { Partner, PartnerId } from '../../domain/entities/partner.entity';
 import { Event } from '../../domain/entities/event.entity';
+import { Cpf } from '../../../shared/domain/value-objects/cpf.vo';
+import { Customer, CustomerId } from '../../domain/entities/customer.entity';
 
-export const PartnerSchema = new EntitySchema<Partner>({
-  class: Partner,
-  properties: {
-    id: { primary: true, type: PartnerIdSchemaType },
-    name: { type: 'string', length: 255 },
-  },
-});
+// Partner entity
+@Entity()
+export class PartnerSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
 
-export const CustomerSchema = new EntitySchema<Customer>({
-  class: Customer,
-  uniques: [{ properties: ['cpf'] }],
-  properties: {
-    id: { type: CustomerIdSchemaType, primary: true },
-    cpf: { type: CpfSchemaType },
-    name: { type: 'string', length: 255 },
-  },
-});
+  @Property()
+  name!: string;
 
-export const EventSchema = new EntitySchema<Event>({
-  class: Event,
-  properties: {
-    id: { type: EventIdSchemaType, primary: true },
-    name: { type: 'string', length: 255 },
-    description: { type: 'text', nullable: true },
-    date: { type: 'date' },
-    is_published: { type: 'boolean', default: false },
-    total_spots: { type: 'number', default: 0 },
-    total_spots_reserved: { type: 'number', default: 0 },
+  static create(data: { name: string }): Partner {
+    const partner = new Partner({ name: data.name });
+    return partner;
+  }
 
-    sections: {
-      type: 'Entity',
-      entity: () => EventSection,
-      mappedBy: (section: any) => section.event_id,
-      cascade: [Cascade.ALL],
-      eager: true,
-    },
+  static fromDomain(partner: Partner): PartnerSchema {
+    const schema = new PartnerSchema();
+    schema.id = partner.id.value;
+    schema.name = partner.name;
+    return schema;
+  }
 
-    partner_id: {
-      type: PartnerIdSchemaType,
-      entity: () => Partner,
-      mapToPk: true,
-      hidden: true,
-    },
-  },
-});
+  toDomain(): Partner {
+    return new Partner({
+      id: new PartnerId(this.id),
+      name: this.name,
+    });
+  }
+}
 
-export const EventSectionSchema = new EntitySchema<EventSection>({
-  class: EventSection,
-  properties: {
-    id: { type: EventSectionIdSchemaType, primary: true },
-    name: { type: 'string', length: 255 },
-    description: { type: 'text', nullable: true },
-    is_published: { type: 'boolean', default: false },
-    total_spots: { type: 'number', default: 0 },
-    total_spots_reserved: { type: 'number', default: 0 },
-    price: { type: 'number', default: 0 },
+// Customer entity
+@Entity()
+export class CustomerSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
 
-    spots: {
-      type: 'Entity',
-      entity: () => EventSpot,
-      mappedBy: (spot: any) => spot.event_section_id,
-      cascade: [Cascade.ALL],
-      eager: true,
-    },
+  @Property({ type: 'string' })
+  cpf!: string;
 
-    event_id: {
-      type: EventIdSchemaType,
-      entity: () => Event,
-      mapToPk: true,
-      hidden: true,
-    },
-  },
-});
+  @Property({ length: 255 })
+  name!: string;
 
-export const EventSpotSchema = new EntitySchema<EventSpot>({
-  class: EventSpot,
-  properties: {
-    id: { type: EventSpotIdSchemaType, primary: true },
-    location: { type: 'string', length: 255, nullable: true },
-    is_reserved: { type: 'boolean', default: false },
-    is_published: { type: 'boolean', default: false },
+  static fromDomain(customer: Customer): CustomerSchema {
+    const schema = new CustomerSchema();
+    schema.id = customer.id!.toString() ?? '';
+    schema.cpf = customer.cpf.value;
+    schema.name = customer.name;
+    return schema;
+  }
 
-    event_section_id: {
-      type: EventSectionIdSchemaType,
-      entity: () => EventSection,
-      mapToPk: true,
-      hidden: true,
-    },
-  },
-});
+  toDomain(): Customer {
+    return new Customer({
+      id: this.id ? new CustomerId(this.id) : undefined,
+      cpf: new Cpf(this.cpf),
+      name: this.name,
+    });
+  }
+}
+
+// Event entity
+@Entity()
+export class EventSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ length: 255 })
+  name!: string;
+
+  @Property({ type: 'text', nullable: true })
+  description?: string;
+
+  @Property({ type: 'date' })
+  date!: Date;
+
+  @Property({ default: false })
+  is_published: boolean = false;
+
+  @Property({ default: 0 })
+  total_spots: number = 0;
+
+  @Property({ default: 0 })
+  total_spots_reserved: number = 0;
+
+  // Relação ManyToOne com Partner
+  @ManyToOne(() => Partner)
+  partner_id!: string;
+
+  // Relação OneToMany com EventSection
+  @OneToMany(() => EventSection, (section) => section.event_id, {
+    cascade: [Cascade.ALL],
+    eager: true,
+    mappedBy: 'event_id',
+  })
+  sections = new Collection<EventSection>(this);
+
+  static fromDomain(event: Event): EventSchema {
+    const schema = new EventSchema();
+    schema.id = event.id.value;
+    schema.name = event.name;
+    schema.description = event.description ?? '';
+    schema.date = event.date;
+    schema.is_published = event.is_published;
+    schema.total_spots = event.total_spots;
+    schema.total_spots_reserved = event.total_spots_reserved;
+    schema.partner_id = event.partner_id.value;
+
+    // schema.sections = new Collection<EventSectionSchema>(
+    //   schema,
+    //   event.sections?.map(EventSectionSchema.fromDomain) ?? [],
+    // );
+    return schema;
+  }
+
+  toDomain(): Event {
+    return new Event({
+      id: new EventSpotId(this.id),
+      name: this.name,
+      description: this.description ?? '',
+      date: this.date,
+      is_published: this.is_published,
+      total_spots: this.total_spots,
+      total_spots_reserved: this.total_spots_reserved,
+      partner_id: this.partner_id,
+
+      // sections: this.sections.getItems().map((section) => section),
+    });
+  }
+}
+
+// EventSection entity
+@Entity()
+export class EventSectionSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ length: 255 })
+  name!: string;
+
+  @Property({ type: 'text', nullable: true })
+  description?: string;
+
+  @Property({ default: false })
+  is_published: boolean = false;
+
+  @Property({ default: 0 })
+  total_spots: number = 0;
+
+  @Property({ default: 0 })
+  total_spots_reserved: number = 0;
+
+  @Property({ default: 0 })
+  price: number = 0;
+
+  // Relação ManyToOne com Event
+  @ManyToOne(() => Event)
+  event_id!: string;
+
+  // Relação OneToMany com EventSpot
+  @OneToMany(() => EventSpot, (spot) => spot.event_section_id, {
+    cascade: [Cascade.ALL],
+    eager: true,
+    mappedBy: 'event_section_id',
+  })
+  spots = MyCollectionFactory.create<EventSpot>(this);
+
+  static fromDomain(section: EventSection): EventSectionSchema {
+    const schema = new EventSectionSchema();
+    schema.id = section.id.value;
+    schema.name = section.name;
+    schema.description = section.description ?? '';
+    schema.is_published = section.is_published;
+    schema.total_spots = section.total_spots;
+    schema.total_spots_reserved = section.total_spots_reserved;
+    schema.price = section.price;
+    schema.event_id = section.event_id!.toString() ?? '';
+
+    schema.spots = MyCollectionFactory.create<EventSpot>(
+      schema,
+      // section.spots?.map(EventSpotSchema.fromDomain) ?? [],
+    );
+    return schema;
+  }
+
+  toDomain(): EventSection {
+    return new EventSection({
+      id: this.id,
+      name: this.name,
+      description: this.description,
+      is_published: this.is_published,
+      total_spots: this.total_spots,
+      total_spots_reserved: this.total_spots_reserved,
+      price: this.price,
+      event_id: this.event_id,
+
+      // spots: this.spots.getItems().map((spot) => spot.toDomain()),
+    });
+  }
+}
+
+// EventSpot entity
+@Entity()
+export class EventSpotSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ length: 255, nullable: true })
+  location?: string;
+
+  @Property({ default: false })
+  is_reserved: boolean = false;
+
+  @Property({ default: false })
+  is_published: boolean = false;
+
+  // Relação ManyToOne com EventSection
+  @ManyToOne(() => EventSection)
+  event_section_id!: string;
+
+  static fromDomain(spot: EventSpot): EventSpotSchema {
+    const schema = new EventSpotSchema();
+    schema.id = spot.id.value;
+    schema.location = spot.location ?? '';
+    schema.is_reserved = spot.is_reserved ?? false;
+    schema.is_published = spot.is_published;
+    schema.event_section_id = spot.event_section_id.toString() ?? '';
+    return schema;
+  }
+
+  toDomain(): EventSpot {
+    return new EventSpot({
+      id: new EventSpotId(this.id),
+      location: this.location || '',
+      is_reserved: this.is_reserved,
+      is_published: this.is_published,
+      event_section_id: this.event_section_id,
+    });
+  }
+}

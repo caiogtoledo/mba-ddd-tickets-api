@@ -30,6 +30,7 @@ describe('EventMysqlRepository', () => {
       host: 'localhost',
       port: 3306,
       forceEntityConstructor: true,
+      debug: true,
     });
 
     await orm.schema.refreshDatabase();
@@ -43,19 +44,27 @@ describe('EventMysqlRepository', () => {
   });
 
   test('deve criar um Event no banco', async () => {
-    const partner = Partner.create({
-      name: 'Test Partner',
-    });
-
+    const partner = Partner.create({ name: 'Partner 1' });
     await partnerRepo.add(partner);
-
     const event = partner.initEvent({
       name: 'Event 1',
       date: new Date(),
       description: 'Event 1 description',
     });
 
+    event.addSection({
+      name: 'Section 1',
+      description: 'Section 1 description',
+      price: 100,
+      total_spots: 1000,
+    });
+
     await eventRepo.add(event);
+
+    await em.clear();
+
+    const eventFound = await eventRepo.findById(event.id);
+    console.log(eventFound);
   });
 
   // test('deve buscar todos os Events', async () => {

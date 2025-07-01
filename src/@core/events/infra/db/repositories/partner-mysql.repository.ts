@@ -4,25 +4,40 @@ import {
 } from '../../../../events/domain/entities/partner.entity';
 import { PartnerRepositoryInterface } from '../../../domain/repositories/partner-repository.interface';
 import { EntityManager } from '@mikro-orm/mysql';
+import { PartnerSchema } from '../schemas';
 
 export class PartnerMysqlRepository implements PartnerRepositoryInterface {
   constructor(private readonly em: EntityManager) {}
 
   async add(entity: Partner): Promise<void> {
-    this.em.persist(entity);
+    let schema = await this.em.findOne(PartnerSchema, { id: entity.id.value });
+    if (schema) {
+      schema.name = entity.name;
+    } else {
+      schema = PartnerSchema.fromDomain(entity);
+      this.em.persist(schema);
+    }
+    await this.em.flush();
   }
 
   async findById(id: string | PartnerId): Promise<Partner | null> {
-    return this.em.findOne(Partner, {
-      id: typeof id === 'string' ? new PartnerId(id) : id,
+    const schema = await this.em.findOne(PartnerSchema, {
+      id: typeof id === 'string' ? id : id.value,
     });
+    return schema ? schema.toDomain() : null;
   }
 
   async findAll(): Promise<Partner[]> {
-    return this.em.find(Partner, {});
+    const schemas = await this.em.find(PartnerSchema, {});
+    return schemas.map((schema) => schema.toDomain());
   }
 
   async delete(entity: Partner): Promise<void> {
-    this.em.remove(entity);
+    const schema = await this.em.findOne(PartnerSchema, {
+      id: entity.id.value,
+    });
+    if (schema) {
+      await this.em.removeAndFlush(schema);
+    }
   }
 }

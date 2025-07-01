@@ -6,13 +6,13 @@ import Uuid from '../../../shared/domain/value-objects/uuid.vo';
 export class CustomerId extends Uuid {}
 
 export type CustomerConstructorProps = {
-  id?: CustomerId | string;
+  id?: CustomerId;
   cpf: Cpf;
   name: string;
 };
 
 export class Customer extends AggregateRoot<CustomerConstructorProps> {
-  id: CustomerId | string; // conveniente para o banco de dados
+  id: CustomerId;
   cpf: Cpf;
   name: string;
 

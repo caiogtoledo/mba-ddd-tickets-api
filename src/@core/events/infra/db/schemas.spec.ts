@@ -1,7 +1,6 @@
 import { MikroORM, MySqlDriver } from '@mikro-orm/mysql';
 import { PartnerSchema } from './schemas';
 import { Partner } from '../../domain/entities/partner.entity';
-import e from 'express';
 
 test('deve criar um partner no banco', async () => {
   const orm = await MikroORM.init<MySqlDriver>({
@@ -14,25 +13,32 @@ test('deve criar um partner no banco', async () => {
     forceEntityConstructor: true,
   });
 
+  await orm.schema.dropSchema();
   await orm.schema.refreshDatabase();
 
-  // Uso do fork para evitar conflitos com o cache do EntityManager
   const em = orm.em.fork();
 
   const partner = Partner.create({
     name: 'Test Partner',
   });
 
-  em.persist(partner);
+  // Converta para schema antes de persistir
+  const partnerSchema = PartnerSchema.fromDomain(partner);
+
+  em.persist(partnerSchema);
 
   await em.flush();
-  await em.clear(); // limpa o cache do EntityManager (unit of work)
+  await em.clear();
 
-  const partnerFound = await em.findOne(Partner, {
+  // Busque usando o schema
+  const partnerFound = await em.findOne(PartnerSchema, {
     name: partner.name,
   });
 
-  console.log(partnerFound);
+  // Converta de volta para domínio se necessário
+  const partnerDomain = partnerFound ? partnerFound.toDomain() : null;
+
+  console.log(partnerDomain);
 
   await orm.close();
 });

@@ -3,7 +3,7 @@ import { CustomerId } from '../../../domain/entities/customer.entity';
 
 export class CustomerIdSchemaType extends Type<CustomerId, string> {
   convertToDatabaseValue(
-    valueObject: CustomerId | undefined | null,
+    valueObject: CustomerId | null,
     platform: Platform,
   ): string {
     return valueObject instanceof CustomerId

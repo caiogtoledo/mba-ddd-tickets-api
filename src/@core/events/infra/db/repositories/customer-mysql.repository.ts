@@ -1,25 +1,42 @@
 import { CustomerRepositoryInterface } from '../../../../events/domain/repositories/customer-repository.interface';
 import { Customer, CustomerId } from '../../../domain/entities/customer.entity';
 import { EntityManager } from '@mikro-orm/mysql';
+import { CustomerSchema } from '../schemas';
 
 export class CustomerMysqlRepository implements CustomerRepositoryInterface {
   constructor(private readonly em: EntityManager) {}
 
   async add(entity: Customer): Promise<void> {
-    this.em.persist(entity);
+    let schema = await this.em.findOne(CustomerSchema, {
+      id: entity.id.value,
+    });
+    if (schema) {
+      schema.name = entity.name;
+    } else {
+      schema = CustomerSchema.fromDomain(entity);
+      this.em.persist(schema);
+    }
+    await this.em.flush();
   }
 
   async findById(id: string | CustomerId): Promise<Customer | null> {
-    return this.em.findOne(Customer, {
-      id: typeof id === 'string' ? new CustomerId(id) : id,
+    const schema = await this.em.findOne(CustomerSchema, {
+      id: typeof id === 'string' ? id : id.value,
     });
+    return schema ? schema.toDomain() : null;
   }
 
   async findAll(): Promise<Customer[]> {
-    return this.em.find(Customer, {});
+    const schemas = await this.em.find(CustomerSchema, {});
+    return schemas.map((schema) => schema.toDomain());
   }
 
   async delete(entity: Customer): Promise<void> {
-    this.em.remove(entity);
+    const schema = await this.em.findOne(CustomerSchema, {
+      id: entity.id!.valueOf() ?? '',
+    });
+    if (schema) {
+      this.em.remove(schema);
+    }
   }
 }

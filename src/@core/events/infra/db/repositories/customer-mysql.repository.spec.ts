@@ -35,7 +35,7 @@ describe('CustomerMysqlRepository', () => {
       cpf: new Cpf('24171862094'),
     });
     await customerRepo.add(customer);
-    await em.flush();
+
     await em.clear();
 
     const found = await customerRepo.findById(customer.id);
@@ -44,9 +44,9 @@ describe('CustomerMysqlRepository', () => {
     expect(found?.name).toBe('Test Customer');
     expect(found?.cpf.value).toBe('24171862094');
 
-    customer.changeName('Updated Customer Name');
-    await customerRepo.add(customer);
-    await em.flush();
+    found!.changeName('Updated Customer Name');
+    await customerRepo.add(found!);
+
     await em.clear();
 
     const updated = await customerRepo.findById(customer.id);
