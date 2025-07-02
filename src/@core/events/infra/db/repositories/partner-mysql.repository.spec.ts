@@ -1,6 +1,11 @@
 import { MikroORM, MySqlDriver, EntityManager } from '@mikro-orm/mysql';
 import { PartnerMysqlRepository } from './partner-mysql.repository';
-import { PartnerSchema } from '../schemas';
+import {
+  EventSchema,
+  EventSectionSchema,
+  EventSpotSchema,
+  PartnerSchema,
+} from '../schemas';
 import { Partner } from '../../../../events/domain/entities/partner.entity';
 
 describe('PartnerMysqlRepository', () => {
@@ -10,16 +15,23 @@ describe('PartnerMysqlRepository', () => {
 
   beforeEach(async () => {
     orm = await MikroORM.init<MySqlDriver>({
-      entities: [PartnerSchema],
+      entities: [
+        PartnerSchema,
+        EventSchema,
+        EventSectionSchema,
+        EventSpotSchema,
+      ],
       dbName: 'events',
       user: 'root',
       password: 'root',
       host: 'localhost',
       port: 3306,
       forceEntityConstructor: true,
+      ensureDatabase: true,
     });
 
     await orm.schema.dropSchema();
+    await orm.schema.createSchema();
     await orm.schema.refreshDatabase();
 
     em = orm.em.fork();

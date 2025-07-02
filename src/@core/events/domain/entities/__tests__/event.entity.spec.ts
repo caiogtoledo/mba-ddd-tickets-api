@@ -1,4 +1,3 @@
-import { EventSection } from '../event-section';
 import { Event } from '../event.entity';
 import { PartnerId } from '../partner.entity';
 

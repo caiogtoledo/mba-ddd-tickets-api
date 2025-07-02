@@ -1,4 +1,9 @@
-import { MikroORM, MySqlDriver, EntityManager } from '@mikro-orm/mysql';
+import {
+  MikroORM,
+  MySqlDriver,
+  EntityManager,
+  EntitySchema,
+} from '@mikro-orm/mysql';
 import { CustomerMysqlRepository } from './customer-mysql.repository';
 import { CustomerSchema } from '../schemas';
 import { Customer } from '../../../domain/entities/customer.entity';
@@ -18,8 +23,10 @@ describe('CustomerMysqlRepository', () => {
       host: 'localhost',
       port: 3306,
       forceEntityConstructor: true,
+      ensureDatabase: true,
     });
-
+    await orm.schema.dropSchema();
+    await orm.schema.createSchema();
     await orm.schema.refreshDatabase();
     em = orm.em.fork();
     customerRepo = new CustomerMysqlRepository(em);

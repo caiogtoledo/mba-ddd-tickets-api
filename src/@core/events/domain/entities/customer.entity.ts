@@ -1,6 +1,5 @@
 import { Cpf } from '../../..//shared/domain/value-objects/cpf.vo';
 import { AggregateRoot } from '../../../shared/domain/aggregate-root';
-import { Name } from '../../../shared/domain/value-objects/name.vo';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
 
 export class CustomerId extends Uuid {}

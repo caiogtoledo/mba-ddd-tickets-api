@@ -1,5 +1,3 @@
-import { Collection } from '@mikro-orm/core';
-
 export interface ICollection<T extends object> {
   getItems(): Iterable<T>;
   add(item: T, ...items: T[]): void;
@@ -13,63 +11,70 @@ export interface ICollection<T extends object> {
   values(): T[];
   [Symbol.iterator](): IterableIterator<T>;
 }
-//Design Pattern - Proxy
 
-export type AnyCollection<T extends object> = Collection<T>;
+export type AnyCollection<T extends object> = T[]; // ou ICollection<T>, se quiser manter consistência
+
+class ArrayCollection<T extends object> implements ICollection<T> {
+  private items: T[];
+
+  constructor(initialItems?: T[]) {
+    this.items = initialItems ? [...initialItems] : [];
+  }
+
+  getItems(): Iterable<T> {
+    return this.items;
+  }
+
+  add(item: T, ...items: T[]): void {
+    this.items.push(item, ...items);
+  }
+
+  remove(item: T, ...items: T[]): void {
+    [item, ...items].forEach((i) => {
+      const index = this.items.indexOf(i);
+      if (index !== -1) this.items.splice(index, 1);
+    });
+  }
+
+  find(predicate: (item: T) => boolean): T | undefined {
+    return this.items.find(predicate);
+  }
+
+  forEach(callbackfn: (value: T, index: number) => void): void {
+    this.items.forEach(callbackfn);
+  }
+
+  map<U>(callbackfn: (value: T, index: number) => U): U[] {
+    return this.items.map(callbackfn);
+  }
+
+  removeAll(): void {
+    this.items = [];
+  }
+
+  count(): number {
+    return this.items.length;
+  }
+
+  get size(): number {
+    return this.items.length;
+  }
+
+  values(): T[] {
+    return [...this.items];
+  }
+
+  [Symbol.iterator](): IterableIterator<T> {
+    return this.items[Symbol.iterator]();
+  }
+}
 
 export class MyCollectionFactory {
-  static create<T extends object>(ref): ICollection<T> {
-    const collection = new Collection<T>(ref);
-    collection['initialized'] = false;
-    return MyCollectionFactory.createProxy(collection);
+  static create<T extends object>(_ref?: any): ICollection<T> {
+    return new ArrayCollection<T>();
   }
 
-  static createFrom<T extends object>(target: Collection<any>): ICollection<T> {
-    return MyCollectionFactory.createProxy(target);
-  }
-
-  private static createProxy<T extends object>(
-    target: Collection<T>,
-  ): ICollection<T> {
-    //@ts-expect-error - Proxy
-    return new Proxy(target, {
-      get(target, prop, receiver) {
-        if (prop === 'find') {
-          return (predicate: (item: T) => boolean): T | undefined => {
-            return target.getItems(false).find(predicate);
-          };
-        }
-
-        if (prop === 'forEach') {
-          return (callbackfn: (value: T, index: number) => void): void => {
-            return target.getItems(false).forEach(callbackfn);
-          };
-        }
-
-        if (prop === 'count') {
-          return () => {
-            return target.isInitialized() ? target.getItems().length : 0;
-          };
-        }
-
-        if (prop === 'map') {
-          return (callbackfn: (value: T, index: number) => any): any[] => {
-            return target.getItems(false).map(callbackfn);
-          };
-        }
-
-        if (prop === 'size') {
-          return target.getItems(false).length;
-        }
-
-        if (prop === 'values') {
-          return () => {
-            return target.getItems(false);
-          };
-        }
-
-        return Reflect.get(target, prop, receiver);
-      },
-    });
+  static createFrom<T extends object>(items: T[]): ICollection<T> {
+    return new ArrayCollection<T>(items);
   }
 }

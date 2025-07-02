@@ -9,10 +9,6 @@ import {
   EntitySchema,
 } from '@mikro-orm/core';
 
-import {
-  ICollection,
-  MyCollectionFactory,
-} from '../../../shared/domain/my-collection';
 import { EventSection } from '../../domain/entities/event-section';
 import { EventSpot, EventSpotId } from '../../domain/entities/event-spot';
 import { Partner, PartnerId } from '../../domain/entities/partner.entity';
@@ -28,11 +24,6 @@ export class PartnerSchema {
 
   @Property()
   name!: string;
-
-  static create(data: { name: string }): Partner {
-    const partner = new Partner({ name: data.name });
-    return partner;
-  }
 
   static fromDomain(partner: Partner): PartnerSchema {
     const schema = new PartnerSchema();
@@ -103,16 +94,16 @@ export class EventSchema {
   total_spots_reserved: number = 0;
 
   // Relação ManyToOne com Partner
-  @ManyToOne(() => Partner)
-  partner_id!: string;
+  @ManyToOne(() => PartnerSchema)
+  partner!: string;
 
   // Relação OneToMany com EventSection
-  @OneToMany(() => EventSection, (section) => section.event_id, {
+  @OneToMany(() => EventSectionSchema, (section) => section.event, {
     cascade: [Cascade.ALL],
     eager: true,
-    mappedBy: 'event_id',
+    mappedBy: 'event',
   })
-  sections = new Collection<EventSection>(this);
+  sections = new Collection<EventSectionSchema>(this);
 
   static fromDomain(event: Event): EventSchema {
     const schema = new EventSchema();
@@ -123,12 +114,16 @@ export class EventSchema {
     schema.is_published = event.is_published;
     schema.total_spots = event.total_spots;
     schema.total_spots_reserved = event.total_spots_reserved;
-    schema.partner_id = event.partner_id.value;
+    schema.partner = event.partner_id.value;
 
-    // schema.sections = new Collection<EventSectionSchema>(
-    //   schema,
-    //   event.sections?.map(EventSectionSchema.fromDomain) ?? [],
-    // );
+    schema.sections = new Collection<EventSectionSchema>(
+      schema,
+      event.sections?.map((section) => {
+        const secSchema = EventSectionSchema.fromDomain(section);
+        secSchema.event = schema.id;
+        return secSchema;
+      }) ?? [],
+    );
     return schema;
   }
 
@@ -141,7 +136,7 @@ export class EventSchema {
       is_published: this.is_published,
       total_spots: this.total_spots,
       total_spots_reserved: this.total_spots_reserved,
-      partner_id: this.partner_id,
+      partner_id: this.partner,
 
       // sections: this.sections.getItems().map((section) => section),
     });
@@ -173,16 +168,16 @@ export class EventSectionSchema {
   price: number = 0;
 
   // Relação ManyToOne com Event
-  @ManyToOne(() => Event)
-  event_id!: string;
+  @ManyToOne(() => EventSchema)
+  event!: string;
 
   // Relação OneToMany com EventSpot
-  @OneToMany(() => EventSpot, (spot) => spot.event_section_id, {
+  @OneToMany(() => EventSpotSchema, (spot) => spot.event_section, {
     cascade: [Cascade.ALL],
     eager: true,
-    mappedBy: 'event_section_id',
+    mappedBy: 'event_section',
   })
-  spots = MyCollectionFactory.create<EventSpot>(this);
+  spots = new Collection<EventSpotSchema>(this);
 
   static fromDomain(section: EventSection): EventSectionSchema {
     const schema = new EventSectionSchema();
@@ -193,11 +188,11 @@ export class EventSectionSchema {
     schema.total_spots = section.total_spots;
     schema.total_spots_reserved = section.total_spots_reserved;
     schema.price = section.price;
-    schema.event_id = section.event_id!.toString() ?? '';
+    schema.event = section.event_id!.toString() ?? '';
 
-    schema.spots = MyCollectionFactory.create<EventSpot>(
+    schema.spots = new Collection<EventSpotSchema>(
       schema,
-      // section.spots?.map(EventSpotSchema.fromDomain) ?? [],
+      section.spots?.map(EventSpotSchema.fromDomain) ?? [],
     );
     return schema;
   }
@@ -211,7 +206,7 @@ export class EventSectionSchema {
       total_spots: this.total_spots,
       total_spots_reserved: this.total_spots_reserved,
       price: this.price,
-      event_id: this.event_id,
+      event_id: this.event,
 
       // spots: this.spots.getItems().map((spot) => spot.toDomain()),
     });
@@ -234,8 +229,8 @@ export class EventSpotSchema {
   is_published: boolean = false;
 
   // Relação ManyToOne com EventSection
-  @ManyToOne(() => EventSection)
-  event_section_id!: string;
+  @ManyToOne(() => EventSectionSchema)
+  event_section!: string;
 
   static fromDomain(spot: EventSpot): EventSpotSchema {
     const schema = new EventSpotSchema();
@@ -243,7 +238,7 @@ export class EventSpotSchema {
     schema.location = spot.location ?? '';
     schema.is_reserved = spot.is_reserved ?? false;
     schema.is_published = spot.is_published;
-    schema.event_section_id = spot.event_section_id.toString() ?? '';
+    schema.event_section = spot.event_section_id.toString() ?? '';
     return schema;
   }
 
@@ -253,7 +248,7 @@ export class EventSpotSchema {
       location: this.location || '',
       is_reserved: this.is_reserved,
       is_published: this.is_published,
-      event_section_id: this.event_section_id,
+      event_section_id: this.event_section,
     });
   }
 }

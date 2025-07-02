@@ -1,20 +1,27 @@
 import { MikroORM, MySqlDriver } from '@mikro-orm/mysql';
-import { PartnerSchema } from './schemas';
+import {
+  EventSchema,
+  EventSectionSchema,
+  EventSpotSchema,
+  PartnerSchema,
+} from './schemas';
 import { Partner } from '../../domain/entities/partner.entity';
 
 test('deve criar um partner no banco', async () => {
   const orm = await MikroORM.init<MySqlDriver>({
-    entities: [PartnerSchema],
+    entities: [PartnerSchema, EventSchema, EventSectionSchema, EventSpotSchema],
     dbName: 'events',
     user: 'root',
     password: 'root',
     host: 'localhost',
     port: 3306,
     forceEntityConstructor: true,
+    ensureDatabase: true,
   });
 
   await orm.schema.dropSchema();
-  await orm.schema.refreshDatabase();
+
+  await orm.schema.refreshDatabase({ wrap: false });
 
   const em = orm.em.fork();
 
@@ -25,9 +32,8 @@ test('deve criar um partner no banco', async () => {
   // Converta para schema antes de persistir
   const partnerSchema = PartnerSchema.fromDomain(partner);
 
-  em.persist(partnerSchema);
+  await em.persistAndFlush(partnerSchema);
 
-  await em.flush();
   await em.clear();
 
   // Busque usando o schema
