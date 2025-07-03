@@ -3,11 +3,14 @@ import { CustomerMysqlRepository } from '../infra/db/repositories/customer-mysql
 import { CustomerSchema } from '../infra/db/schemas';
 import { Customer } from '../domain/entities/customer.entity';
 import { CustomerService } from './customer.service';
+import { UnitOfWorkMikroOrm } from '../../shared/infra/unit-of-work-mikro-orm';
 
 describe('CustomerService', () => {
   let orm: MikroORM;
   let em: EntityManager;
+  let unitOfWork: UnitOfWorkMikroOrm;
   let customerRepo: CustomerMysqlRepository;
+  let customerService: CustomerService;
 
   beforeEach(async () => {
     orm = await MikroORM.init<MySqlDriver>({
@@ -26,6 +29,9 @@ describe('CustomerService', () => {
     await orm.schema.refreshDatabase();
 
     em = orm.em.fork();
+    unitOfWork = new UnitOfWorkMikroOrm(em);
+    customerRepo = new CustomerMysqlRepository(em);
+    customerService = new CustomerService(customerRepo, unitOfWork);
   });
 
   afterEach(async () => {
@@ -33,9 +39,6 @@ describe('CustomerService', () => {
   });
 
   test('should list customers', async () => {
-    const customerRepo = new CustomerMysqlRepository(em);
-    const customerService = new CustomerService(customerRepo);
-
     const customer = Customer.create({
       cpf: '24171862094',
       name: 'John Doe',
@@ -43,7 +46,7 @@ describe('CustomerService', () => {
 
     await customerRepo.add(customer);
     await em.flush();
-    await em.clear();
+    em.clear();
 
     const customers = await customerService.list();
 
@@ -56,19 +59,21 @@ describe('CustomerService', () => {
   });
 
   test('should register customer', async () => {
-    const customerRepo = new CustomerMysqlRepository(em);
-    const customerService = new CustomerService(customerRepo);
-
-    const customer = Customer.create({
+    const customer = await customerService.register({
       cpf: '24171862094',
       name: 'John Doe',
     });
 
-    await customerService.register({
-      name: customer.name,
-      cpf: customer.cpf.value,
-    });
+    expect(customer).toBeInstanceOf(Customer);
+    expect(customer.cpf.value).toBe('24171862094');
+    expect(customer.name).toBe('John Doe');
+    expect(customer.id).toBeDefined();
 
     await em.clear();
+
+    const customerFound = await customerRepo.findById(customer.id);
+    expect(customerFound).toBeDefined();
+    expect(customerFound!.cpf.value).toBe('24171862094');
+    expect(customerFound!.name).toBe('John Doe');
   });
 });
