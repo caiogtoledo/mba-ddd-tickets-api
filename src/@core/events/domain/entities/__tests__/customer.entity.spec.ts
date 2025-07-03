@@ -1,5 +1,3 @@
-import { Name } from '../../../../shared/domain/value-objects/name.vo';
-import { Cpf } from '../../../../shared/domain/value-objects/cpf.vo';
 import { Customer } from '../customer.entity';
 
 test('should create a valid Customer entity', () => {
@@ -7,7 +5,7 @@ test('should create a valid Customer entity', () => {
   const name = 'John Doe';
 
   const customer = Customer.create({
-    cpf: new Cpf(cpf),
+    cpf: cpf,
     name: name,
   });
 

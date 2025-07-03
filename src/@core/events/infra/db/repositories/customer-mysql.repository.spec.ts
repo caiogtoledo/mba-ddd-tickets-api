@@ -39,7 +39,7 @@ describe.skip('CustomerMysqlRepository', () => {
   test('deve criar e atualizar um Customer no banco', async () => {
     const customer = Customer.create({
       name: 'Test Customer',
-      cpf: new Cpf('24171862094'),
+      cpf: '24171862094',
     });
     await customerRepo.add(customer);
 
@@ -65,11 +65,11 @@ describe.skip('CustomerMysqlRepository', () => {
   test('deve buscar todos os Customers', async () => {
     const customer1 = Customer.create({
       name: 'Customer 1',
-      cpf: new Cpf('24171862094'),
+      cpf: '24171862094',
     });
     const customer2 = Customer.create({
       name: 'Customer 2',
-      cpf: new Cpf('00557663075'),
+      cpf: '00557663075',
     });
 
     await customerRepo.add(customer1);
@@ -88,7 +88,7 @@ describe.skip('CustomerMysqlRepository', () => {
   test('deve deletar um Customer', async () => {
     const customer = Customer.create({
       name: 'Test Customer',
-      cpf: new Cpf('24171862094'),
+      cpf: '24171862094',
     });
     await customerRepo.add(customer);
     await em.flush();

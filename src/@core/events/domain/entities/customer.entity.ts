@@ -25,8 +25,12 @@ export class Customer extends AggregateRoot<CustomerConstructorProps> {
     this.name = props.name!;
   }
 
-  static create(command: { name: string; cpf: Cpf }) {
-    return new Customer(command);
+  static create(command: { name: string; cpf: string }) {
+    const customer = new Customer({
+      name: command.name,
+      cpf: new Cpf(command.cpf),
+    });
+    return customer;
   }
 
   changeName(name: string) {
