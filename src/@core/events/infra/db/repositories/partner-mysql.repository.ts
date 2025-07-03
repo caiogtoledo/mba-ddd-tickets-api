@@ -2,11 +2,11 @@ import {
   Partner,
   PartnerId,
 } from '../../../../events/domain/entities/partner.entity';
-import { PartnerRepositoryInterface } from '../../../domain/repositories/partner-repository.interface';
+import { IPartnerRepository } from '../../../domain/repositories/partner-repository.interface';
 import { EntityManager } from '@mikro-orm/mysql';
 import { PartnerSchema } from '../schemas';
 
-export class PartnerMysqlRepository implements PartnerRepositoryInterface {
+export class PartnerMysqlRepository implements IPartnerRepository {
   constructor(private readonly em: EntityManager) {}
 
   async add(entity: Partner): Promise<void> {

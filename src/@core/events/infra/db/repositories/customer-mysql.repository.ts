@@ -1,9 +1,9 @@
-import { CustomerRepositoryInterface } from '../../../../events/domain/repositories/customer-repository.interface';
+import { ICustomerRepository } from '../../../../events/domain/repositories/customer-repository.interface';
 import { Customer, CustomerId } from '../../../domain/entities/customer.entity';
 import { EntityManager } from '@mikro-orm/mysql';
 import { CustomerSchema } from '../schemas';
 
-export class CustomerMysqlRepository implements CustomerRepositoryInterface {
+export class CustomerMysqlRepository implements ICustomerRepository {
   constructor(private readonly em: EntityManager) {}
 
   async add(entity: Customer): Promise<void> {

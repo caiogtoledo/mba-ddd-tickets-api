@@ -1,9 +1,9 @@
 import { Event, EventId } from '../../../domain/entities/event.entity';
 import { EntityManager } from '@mikro-orm/mysql';
-import { EventRepositoryInterface } from '../../../../events/domain/repositories/event-repository.interface';
+import { IEventRepository } from '../../../../events/domain/repositories/event-repository.interface';
 import { EventSchema } from '../schemas';
 
-export class EventMysqlRepository implements EventRepositoryInterface {
+export class EventMysqlRepository implements IEventRepository {
   constructor(private readonly em: EntityManager) {}
 
   async add(entity: Event): Promise<void> {
