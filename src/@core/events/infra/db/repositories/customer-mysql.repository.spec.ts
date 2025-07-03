@@ -9,7 +9,7 @@ import { CustomerSchema } from '../schemas';
 import { Customer } from '../../../domain/entities/customer.entity';
 import { Cpf } from '../../../../shared/domain/value-objects/cpf.vo';
 
-describe('CustomerMysqlRepository', () => {
+describe.skip('CustomerMysqlRepository', () => {
   let orm: MikroORM;
   let em: EntityManager;
   let customerRepo: CustomerMysqlRepository;

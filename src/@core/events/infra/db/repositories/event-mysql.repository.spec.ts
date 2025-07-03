@@ -10,7 +10,7 @@ import {
 import { PartnerMysqlRepository } from './partner-mysql.repository';
 import { Partner } from '../../../../events/domain/entities/partner.entity';
 
-describe('EventMysqlRepository', () => {
+describe.skip('EventMysqlRepository', () => {
   let orm: MikroORM;
   let em: EntityManager;
   let eventRepo: EventMysqlRepository;

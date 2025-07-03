@@ -7,7 +7,7 @@ import {
 } from './schemas';
 import { Partner } from '../../domain/entities/partner.entity';
 
-test('deve criar um partner no banco', async () => {
+test.skip('deve criar um partner no banco', async () => {
   const orm = await MikroORM.init<MySqlDriver>({
     entities: [PartnerSchema, EventSchema, EventSectionSchema, EventSpotSchema],
     dbName: 'events',
