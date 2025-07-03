@@ -25,7 +25,7 @@ describe.skip('EventMysqlRepository', () => {
         PartnerSchema,
         CustomerSchema,
       ],
-      dbName: 'events',
+      dbName: 'events-eventrepotest',
       user: 'root',
       password: 'root',
       host: 'localhost',
@@ -55,17 +55,17 @@ describe.skip('EventMysqlRepository', () => {
         name: 'Event 1',
         date: new Date(),
         description: 'Event 1 description',
-      }) || {}; // Ensure event is initialized
+      }) || {};
 
     event.addSection?.({
       name: 'Section 1',
       description: 'Section 1 description',
       price: 100,
       total_spots: 15,
-    }); // Use optional chaining to avoid errors if event is undefined
+    });
 
     await eventRepo.add(event);
-
+    await em.flush();
     await em.clear();
 
     const eventFound = await eventRepo.findById(event.id);

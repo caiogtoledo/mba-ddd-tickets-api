@@ -17,7 +17,6 @@ export class PartnerMysqlRepository implements IPartnerRepository {
       schema = PartnerSchema.fromDomain(entity);
       this.em.persist(schema);
     }
-    await this.em.flush();
   }
 
   async findById(id: string | PartnerId): Promise<Partner | null> {

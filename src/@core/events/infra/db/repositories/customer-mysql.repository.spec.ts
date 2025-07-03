@@ -1,15 +1,9 @@
-import {
-  MikroORM,
-  MySqlDriver,
-  EntityManager,
-  EntitySchema,
-} from '@mikro-orm/mysql';
+import { MikroORM, MySqlDriver, EntityManager } from '@mikro-orm/mysql';
 import { CustomerMysqlRepository } from './customer-mysql.repository';
 import { CustomerSchema } from '../schemas';
 import { Customer } from '../../../domain/entities/customer.entity';
-import { Cpf } from '../../../../shared/domain/value-objects/cpf.vo';
 
-describe.skip('CustomerMysqlRepository', () => {
+describe('CustomerMysqlRepository', () => {
   let orm: MikroORM;
   let em: EntityManager;
   let customerRepo: CustomerMysqlRepository;
@@ -42,7 +36,7 @@ describe.skip('CustomerMysqlRepository', () => {
       cpf: '24171862094',
     });
     await customerRepo.add(customer);
-
+    await em.flush();
     await em.clear();
 
     const found = await customerRepo.findById(customer.id);
@@ -53,7 +47,7 @@ describe.skip('CustomerMysqlRepository', () => {
 
     found!.changeName('Updated Customer Name');
     await customerRepo.add(found!);
-
+    await em.flush();
     await em.clear();
 
     const updated = await customerRepo.findById(customer.id);

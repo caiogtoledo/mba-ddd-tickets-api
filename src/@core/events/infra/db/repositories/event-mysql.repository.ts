@@ -14,7 +14,6 @@ export class EventMysqlRepository implements IEventRepository {
       schema = EventSchema.fromDomain(entity);
       this.em.persist(schema);
     }
-    await this.em.flush();
   }
 
   async findById(id: string | EventId): Promise<Event | null> {

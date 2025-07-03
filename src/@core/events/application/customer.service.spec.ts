@@ -4,7 +4,7 @@ import { CustomerSchema } from '../infra/db/schemas';
 import { Customer } from '../domain/entities/customer.entity';
 import { CustomerService } from './customer.service';
 
-describe('EventMysqlRepository', () => {
+describe('CustomerService', () => {
   let orm: MikroORM;
   let em: EntityManager;
   let customerRepo: CustomerMysqlRepository;
@@ -12,7 +12,7 @@ describe('EventMysqlRepository', () => {
   beforeEach(async () => {
     orm = await MikroORM.init<MySqlDriver>({
       entities: [CustomerSchema],
-      dbName: 'events',
+      dbName: 'events-customerservice',
       user: 'root',
       password: 'root',
       host: 'localhost',
@@ -42,7 +42,7 @@ describe('EventMysqlRepository', () => {
     });
 
     await customerRepo.add(customer);
-
+    await em.flush();
     await em.clear();
 
     const customers = await customerService.list();
@@ -50,6 +50,7 @@ describe('EventMysqlRepository', () => {
     console.log(customers);
 
     expect(customers).toHaveLength(1);
+
     expect(customers[0].cpf.value).toBe('24171862094');
     expect(customers[0].name).toBe('John Doe');
   });

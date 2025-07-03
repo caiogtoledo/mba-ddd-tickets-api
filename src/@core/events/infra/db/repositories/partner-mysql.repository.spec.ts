@@ -8,7 +8,7 @@ import {
 } from '../schemas';
 import { Partner } from '../../../../events/domain/entities/partner.entity';
 
-describe.skip('PartnerMysqlRepository', () => {
+describe('PartnerMysqlRepository', () => {
   let orm: MikroORM;
   let em: EntityManager;
   let partnerRepo: PartnerMysqlRepository;
@@ -21,7 +21,7 @@ describe.skip('PartnerMysqlRepository', () => {
         EventSectionSchema,
         EventSpotSchema,
       ],
-      dbName: 'events',
+      dbName: 'events-partnerrepotest',
       user: 'root',
       password: 'root',
       host: 'localhost',
@@ -56,7 +56,7 @@ describe.skip('PartnerMysqlRepository', () => {
 
     partner.changeName('Updated Partner Name');
     await partnerRepo.add(partner);
-
+    await em.flush();
     await em.clear();
 
     const updated = await partnerRepo.findById(partner.id);
@@ -71,7 +71,7 @@ describe.skip('PartnerMysqlRepository', () => {
 
     await partnerRepo.add(partner1);
     await partnerRepo.add(partner2);
-
+    await em.flush();
     await em.clear();
 
     const partners = await partnerRepo.findAll();
@@ -85,14 +85,14 @@ describe.skip('PartnerMysqlRepository', () => {
   test('deve deletar um partner', async () => {
     const partner = Partner.create({ name: 'Test Partner' });
     await partnerRepo.add(partner);
-
+    await em.flush();
     await em.clear();
 
     const found = await partnerRepo.findById(partner.id);
     expect(found).toBeInstanceOf(Partner);
 
     await partnerRepo.delete(partner);
-
+    await em.flush();
     await em.clear();
 
     const deleted = await partnerRepo.findById(partner.id);

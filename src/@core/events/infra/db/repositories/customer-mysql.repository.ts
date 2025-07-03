@@ -16,7 +16,6 @@ export class CustomerMysqlRepository implements ICustomerRepository {
       schema = CustomerSchema.fromDomain(entity);
       this.em.persist(schema);
     }
-    await this.em.flush();
   }
 
   async findById(id: string | CustomerId): Promise<Customer | null> {
