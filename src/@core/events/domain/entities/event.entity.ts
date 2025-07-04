@@ -1,12 +1,13 @@
 import { AggregateRoot } from '../../..//shared/domain/aggregate-root';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
 import { PartnerId } from './partner.entity';
-import { EventSection } from './event-section';
+import { EventSection, EventSectionId } from './event-section';
 import {
   AnyCollection,
   ICollection,
   MyCollectionFactory,
 } from '../../../shared/domain/my-collection';
+import { EventSpotId } from './event-spot';
 
 export class EventId extends Uuid {}
 
@@ -111,6 +112,39 @@ export class Event extends AggregateRoot<EventConstructorProps> {
     const section = EventSection.create(command);
     this._sections.add(section);
     this.total_spots += section.total_spots;
+  }
+
+  changeSectionInformation(command: {
+    section_id: EventSectionId;
+    name?: string;
+    description?: string | null;
+  }) {
+    const section = this.sections.find((section) =>
+      section.id.equals(command.section_id),
+    );
+
+    if (!section) {
+      throw new Error('Section not found');
+    }
+
+    command.name && section.changeName(command.name);
+    command.description && section.changeDescription(command.description);
+  }
+
+  changeSectionLocation(command: {
+    section_id: EventSectionId;
+    spot_id: EventSpotId;
+    location: string;
+  }) {
+    const section = this.sections.find((section) =>
+      section.id.equals(command.section_id),
+    );
+
+    if (!section) {
+      throw new Error('Section not found');
+    }
+
+    section.changeLocation(command);
   }
 
   get sections(): ICollection<EventSection> {

@@ -5,7 +5,7 @@ import {
 } from '../../../shared/domain/my-collection';
 import { Entity } from '../../../shared/domain/entity';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
-import { EventSpot } from './event-spot';
+import { EventSpot, EventSpotId } from './event-spot';
 import { EventId } from './event.entity';
 
 export class EventSectionId extends Uuid {}
@@ -87,6 +87,14 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
 
   changePrice(price: number) {
     this.price = price;
+  }
+
+  changeLocation(command: { spot_id: EventSpotId; location: string }) {
+    const spot = this.spots.find((spot) => spot.id.equals(command.spot_id));
+    if (!spot) {
+      throw new Error('Spot not found');
+    }
+    spot.changeLocation(command.location);
   }
 
   publish() {
