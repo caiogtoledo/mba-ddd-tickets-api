@@ -252,3 +252,43 @@ export class EventSpotSchema {
     });
   }
 }
+
+// SpotReservationSchema entity
+@Entity()
+export class SpotReservationSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ length: 255, nullable: true })
+  location?: string;
+
+  @Property({ default: false })
+  is_reserved: boolean = false;
+
+  @Property({ default: false })
+  is_published: boolean = false;
+
+  // Relação ManyToOne com EventSection
+  @ManyToOne(() => EventSectionSchema)
+  event_section!: string;
+
+  static fromDomain(spot: EventSpot): EventSpotSchema {
+    const schema = new EventSpotSchema();
+    schema.id = spot.id.value;
+    schema.location = spot.location ?? '';
+    schema.is_reserved = spot.is_reserved ?? false;
+    schema.is_published = spot.is_published;
+    schema.event_section = spot.event_section_id.toString() ?? '';
+    return schema;
+  }
+
+  toDomain(): EventSpot {
+    return new EventSpot({
+      id: new EventSpotId(this.id),
+      location: this.location || '',
+      is_reserved: this.is_reserved,
+      is_published: this.is_published,
+      event_section_id: this.event_section,
+    });
+  }
+}
