@@ -6,7 +6,7 @@ import {
   ManyToOne,
   Collection,
   Cascade,
-  EntitySchema,
+  Enum,
 } from '@mikro-orm/core';
 
 import { EventSection } from '../../domain/entities/event-section';
@@ -15,6 +15,11 @@ import { Partner, PartnerId } from '../../domain/entities/partner.entity';
 import { Event } from '../../domain/entities/event.entity';
 import { Cpf } from '../../../shared/domain/value-objects/cpf.vo';
 import { Customer, CustomerId } from '../../domain/entities/customer.entity';
+import {
+  Order,
+  OrderId,
+  OrderStatus,
+} from '../../domain/entities/order.entity';
 
 // Partner entity
 @Entity()
@@ -289,6 +294,49 @@ export class SpotReservationSchema {
       is_reserved: this.is_reserved,
       is_published: this.is_published,
       event_section_id: this.event_section,
+    });
+  }
+}
+
+@Entity()
+export class OrderSchema {
+  @PrimaryKey({ type: 'uuid' })
+  id!: string;
+
+  @Property({ type: 'number' })
+  amount!: number;
+
+  @Enum(() => OrderStatus)
+  status!: OrderStatus;
+
+  @ManyToOne(() => CustomerSchema, {
+    mapToPk: true,
+    hidden: true,
+  })
+  customer!: string;
+
+  @ManyToOne(() => EventSpotSchema, {
+    mapToPk: true,
+    hidden: true,
+  })
+  event_spot!: string;
+
+  static fromDomain(order: Order): OrderSchema {
+    const schema = new OrderSchema();
+    schema.id = order.id.value;
+    schema.amount = order.amount;
+    schema.status = order.status;
+    schema.customer = order.customer_id.value;
+    schema.event_spot = order.event_spot_id.value;
+    return schema;
+  }
+
+  toDomain(): Order {
+    return new Order({
+      id: new OrderId(this.id),
+      amount: this.amount,
+      customer_id: new CustomerId(this.customer),
+      event_spot_id: new EventSpotId(this.event_spot),
     });
   }
 }
