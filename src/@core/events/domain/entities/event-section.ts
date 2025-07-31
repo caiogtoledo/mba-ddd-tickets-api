@@ -1,6 +1,12 @@
+import {
+  AnyCollection,
+  ICollection,
+  MyCollectionFactory,
+} from '../../../shared/domain/my-collection';
 import { Entity } from '../../../shared/domain/entity';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
-import { EventSpot } from './event-spot';
+import { EventSpot, EventSpotId } from './event-spot';
+import { EventId } from './event.entity';
 
 export class EventSectionId extends Uuid {}
 
@@ -19,7 +25,7 @@ export type EventSectionConstructorProps = {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
-  spots?: Set<EventSpot>;
+  event_id?: EventId | string;
 };
 
 export class EventSection extends Entity<EventSectionConstructorProps> {
@@ -30,7 +36,8 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
   total_spots: number;
   total_spots_reserved: number;
   price: number;
-  spots?: Set<EventSpot>;
+  event_id?: EventId | string;
+  private _spots?: ICollection<EventSpot>;
 
   constructor(props: EventSectionConstructorProps) {
     super();
@@ -44,7 +51,11 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
     this.total_spots = props.total_spots;
     this.total_spots_reserved = props.total_spots_reserved ?? 0;
     this.price = props.price;
-    this.spots = props.spots ?? new Set<EventSpot>();
+    this.event_id =
+      props.event_id instanceof EventId
+        ? props.event_id
+        : new EventId(props.event_id);
+    this._spots = MyCollectionFactory.create<EventSpot>(this);
   }
 
   static create(command: EventSectionCreateCommand) {
@@ -62,7 +73,7 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
 
   private initSpots() {
     for (let i = 0; i < this.total_spots; i++) {
-      this.spots?.add(EventSpot.create());
+      this.spots.add(EventSpot.create(this.id));
     }
   }
 
@@ -76,6 +87,14 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
 
   changePrice(price: number) {
     this.price = price;
+  }
+
+  changeLocation(command: { spot_id: EventSpotId; location: string }) {
+    const spot = this.spots.find((spot) => spot.id.equals(command.spot_id));
+    if (!spot) {
+      throw new Error('Spot not found');
+    }
+    spot.changeLocation(command.location);
   }
 
   publish() {
@@ -94,6 +113,47 @@ export class EventSection extends Entity<EventSectionConstructorProps> {
   unPublishAll() {
     this.unPublish();
     this.spots?.forEach((spot) => spot.unPublish());
+  }
+
+  allowReserveSpot(spot_id: EventSpotId) {
+    if (!this.is_published) {
+      return false;
+    }
+
+    const spot = this.spots.find((spot) => spot.id.equals(spot_id));
+
+    if (!spot) {
+      throw new Error('Spot not found');
+    }
+
+    if (spot.is_reserved) {
+      return false;
+    }
+
+    if (!spot.is_published) {
+      return false;
+    }
+
+    return true;
+  }
+
+  markSpotAsReserved(spot_id: EventSpotId) {
+    const spot = this.spots.find((spot) => spot.id.equals(spot_id));
+    if (!spot) {
+      throw new Error('Spot not found');
+    }
+    if (spot.is_reserved) {
+      throw new Error('Spot already reserved');
+    }
+    spot.markAsReserved();
+  }
+
+  get spots(): ICollection<EventSpot> {
+    return this._spots as ICollection<EventSpot>;
+  }
+
+  set spots(spots: AnyCollection<EventSpot>) {
+    this._spots = MyCollectionFactory.create<EventSpot>(spots);
   }
 
   toJSON() {

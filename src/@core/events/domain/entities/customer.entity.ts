@@ -1,20 +1,19 @@
 import { Cpf } from '../../..//shared/domain/value-objects/cpf.vo';
 import { AggregateRoot } from '../../../shared/domain/aggregate-root';
-import { Name } from '../../../shared/domain/value-objects/name.vo';
 import Uuid from '../../../shared/domain/value-objects/uuid.vo';
 
 export class CustomerId extends Uuid {}
 
 export type CustomerConstructorProps = {
-  id?: CustomerId | string;
+  id?: CustomerId;
   cpf: Cpf;
-  name: Name;
+  name: string;
 };
 
 export class Customer extends AggregateRoot<CustomerConstructorProps> {
-  id: CustomerId | string; // conveniente para o banco de dados
+  id: CustomerId;
   cpf: Cpf;
-  name: Name;
+  name: string;
 
   constructor(props: CustomerConstructorProps) {
     super();
@@ -26,8 +25,16 @@ export class Customer extends AggregateRoot<CustomerConstructorProps> {
     this.name = props.name!;
   }
 
-  static create(command: { name: Name; cpf: Cpf }) {
-    return new Customer(command);
+  static create(command: { name: string; cpf: string }) {
+    const customer = new Customer({
+      name: command.name,
+      cpf: new Cpf(command.cpf),
+    });
+    return customer;
+  }
+
+  changeName(name: string) {
+    this.name = name;
   }
 
   toJSON() {

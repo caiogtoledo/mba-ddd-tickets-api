@@ -1,5 +1,5 @@
 export abstract class Entity<T> {
-  readonly _id: any;
+  readonly id: any;
   abstract toJSON(): any;
 
   equals(obj: this): boolean {
@@ -7,7 +7,7 @@ export abstract class Entity<T> {
       return false;
     }
 
-    if (obj._id === undefined) {
+    if (obj.id === undefined) {
       return false;
     }
 
@@ -15,6 +15,6 @@ export abstract class Entity<T> {
       return false;
     }
 
-    return obj._id.equals(this._id);
+    return obj.id.equals(this.id);
   }
 }
